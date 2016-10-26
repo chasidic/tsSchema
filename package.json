@@ -28,10 +28,10 @@
     "minimist": "^1.2.0",
     "through": "^2.3.8",
     "typescript-formatter": "^3.1.0",
-    "vinyl-fs": "^2.4.4"
+    "vinyl-fs": "^2.4.4",
+    "typescript": "^2.0.6"
   },
   "devDependencies": {
-    "@types/node": "^6.0.45",
-    "typescript": "^2.0.6"
+    "@types/node": "^6.0.45"
   }
 }
