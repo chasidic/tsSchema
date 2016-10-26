@@ -4,6 +4,9 @@
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "tsSchema": "./bin/tsSchema.js"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/chasidic/tsSchema.git"
@@ -22,7 +25,10 @@
   "author": "Ilan Frumer <ilanfrumer@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "typescript-formatter": "^2.3.0"
+    "minimist": "^1.2.0",
+    "through": "^2.3.8",
+    "typescript-formatter": "^2.3.0",
+    "vinyl-fs": "^2.4.4"
   },
   "devDependencies": {
     "@types/node": "^6.0.38",
