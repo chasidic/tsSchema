@@ -59,7 +59,7 @@ exports.unique = (array) => {
         return uniq;
     });
 };
-exports.tsEnum = (e) => e.map(t => `"${t}"`).join(' | ');
+exports.tsEnum = (e) => e.map(t => `'${t}'`).join(' | ');
 exports.pascalCased = (text) => text
     .replace(/([A-Z_])/g, ' $1')
     .replace(/\w+/g, (w) => w[0].toUpperCase() + w.slice(1).toLowerCase())

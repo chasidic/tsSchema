@@ -64,7 +64,7 @@ export let unique = <T>(array: T[]): T[] => {
   });
 };
 
-export let tsEnum = (e: string[]) => e.map(t => `"${ t }"`).join(' | ');
+export let tsEnum = (e: string[]) => e.map(t => `'${ t }'`).join(' | ');
 
 export let pascalCased = (text: string) => text
   .replace(/([A-Z_])/g, ' $1')
