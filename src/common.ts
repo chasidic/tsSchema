@@ -8,8 +8,8 @@ const KEY_TYPE = /^\{ \[key: string\]: (.+?) \}$/;
 
 export let getInnerType = (type: string) => {
   let match: RegExpMatchArray;
-  if (match = type.match(KEY_TYPE)) { type = match[1]; }
   if (match = type.match(ARRAY_TYPE)) { type = match[1]; }
+  if (match = type.match(KEY_TYPE)) { type = match[1]; }
   return type;
 };
 

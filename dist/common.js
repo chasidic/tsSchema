@@ -5,10 +5,10 @@ const ARRAY_TYPE = /^(.+?)(\[\])+$/;
 const KEY_TYPE = /^\{ \[key: string\]: (.+?) \}$/;
 exports.getInnerType = (type) => {
     let match;
-    if (match = type.match(KEY_TYPE)) {
+    if (match = type.match(ARRAY_TYPE)) {
         type = match[1];
     }
-    if (match = type.match(ARRAY_TYPE)) {
+    if (match = type.match(KEY_TYPE)) {
         type = match[1];
     }
     return type;
