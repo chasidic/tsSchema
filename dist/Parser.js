@@ -1,8 +1,8 @@
 "use strict";
-const typescript_formatter_1 = require('typescript-formatter');
-const fs_1 = require('fs');
-const path_1 = require('path');
-const common_1 = require('./common');
+const typescript_formatter_1 = require("typescript-formatter");
+const fs_1 = require("fs");
+const path_1 = require("path");
+const common_1 = require("./common");
 const MIN_SUPER = 2;
 class Parser {
     constructor() {
@@ -133,7 +133,8 @@ class Parser {
                 extraSet.add(`FORMAT: ${node.format}`);
             }
             let extras = extraSet.size > 0 ? ` // ${Array.from(extraSet).join(' & ')}` : '';
-            interfaces[context][key].push({ key, type, extras, required });
+            let innerType = common_1.getInnerType(type);
+            interfaces[context][key].push({ key, type, extras, required, innerType });
         }
         let contexts = [];
         for (let context of Object.keys(interfaces)) {
@@ -145,24 +146,15 @@ class Parser {
                     throw new Error('Cannot perform merge!');
                 }
                 let node = nodes[0];
-                let type = node.type;
+                let innerType = node.innerType;
                 // Validate & Normalize references
-                let innerType = common_1.getInnerType(type);
                 if (!common_1.PREDEFINED.has(innerType)) {
                     if (!interfaces[innerType] && !this.enums.has(innerType)) {
-                        throw new Error(`Bad reference: ${innerType} ${type}`);
-                    }
-                    else {
-                        let t1 = common_1.extractNamespace(context);
-                        let t2 = common_1.extractNamespace(innerType);
-                        if (t1.prefix === t2.prefix) {
-                            node.type = type.replace(innerType, t2.suffix);
-                        }
+                        throw new Error(`Bad reference: ${innerType} ${node.type}`);
                     }
                 }
                 properties.push(node);
             }
-            properties.sort(common_1.propertiesSort);
             contexts.push({ names: [context], properties, parents: new Set() });
         }
         let parentsMap = new Map();
@@ -207,8 +199,17 @@ class Parser {
                         c.properties.splice(idx, 1);
                     }
                 }
-                c.properties.sort((a, b) => a.key.localeCompare(b.key));
             });
+            if (c.names.length > 0) {
+                c.properties.forEach((prop) => {
+                    let t1 = common_1.extractNamespace(c.names[0]);
+                    let t2 = common_1.extractNamespace(prop.innerType);
+                    if (t1.prefix === t2.prefix) {
+                        prop.type = prop.type.replace(prop.innerType, t2.suffix);
+                    }
+                });
+            }
+            c.properties.sort(common_1.propertiesSort);
         }
         contexts.sort((a, b) => a.names[0].localeCompare(b.names[0]));
         return contexts;

@@ -33,12 +33,16 @@ export let urnToId = (id: string) => {
     .replace(/:/g, '.');
 };
 
-const namespaceRegex =  /^(.+)\.(.+?)$/;
+const namespaceRegex = /^(.+)\.(.+?)$/;
 export let extractNamespace = (n: string) => {
-    let match = n.match(namespaceRegex);
+  let match = n.match(namespaceRegex);
+  if (match) {
     let prefix = match[1];
     let suffix = match[2];
     return { prefix, suffix };
+  } else {
+    return { prefix: null, suffix: n };
+  }
 };
 
 export let isSuperContext = (a: IContext, b: IContext): boolean => (
@@ -64,7 +68,7 @@ export let unique = <T>(array: T[]): T[] => {
   });
 };
 
-export let tsEnum = (e: string[]) => e.map(t => `'${ t }'`).join(' | ');
+export let tsEnum = (e: string[]) => e.map(t => `'${t}'`).join(' | ');
 
 export let pascalCased = (text: string) => text
   .replace(/([A-Z_])/g, ' $1')

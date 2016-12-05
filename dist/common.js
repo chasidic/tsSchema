@@ -38,9 +38,14 @@ exports.urnToId = (id) => {
 const namespaceRegex = /^(.+)\.(.+?)$/;
 exports.extractNamespace = (n) => {
     let match = n.match(namespaceRegex);
-    let prefix = match[1];
-    let suffix = match[2];
-    return { prefix, suffix };
+    if (match) {
+        let prefix = match[1];
+        let suffix = match[2];
+        return { prefix, suffix };
+    }
+    else {
+        return { prefix: null, suffix: n };
+    }
 };
 exports.isSuperContext = (a, b) => (a.properties.length > 0 &&
     b.properties.length > 0 &&

@@ -44,11 +44,13 @@ export class Parser {
     let contexts = this.merge();
     let outputRows: string[] = [];
 
-    let rowsNamespace: { [namespace: string]: {
-      enums: string[];
-      interfaces: string[];
-      aliases: string[];
-    } } = {};
+    let rowsNamespace: {
+      [namespace: string]: {
+        enums: string[];
+        interfaces: string[];
+        aliases: string[];
+      }
+    } = {};
 
     let getNamespace = (prefix: string) => {
       rowsNamespace[prefix] = rowsNamespace[prefix] || { enums: [], interfaces: [], aliases: [] };
@@ -58,7 +60,7 @@ export class Parser {
     this.enums.forEach((enums, n) => {
       let t = extractNamespace(n);
       let rows = getNamespace(t.prefix);
-      rows.enums.push(`type ${ t.suffix } = ${ enums };`);
+      rows.enums.push(`type ${t.suffix} = ${enums};`);
     });
 
     for (let context of contexts) {
@@ -71,14 +73,14 @@ export class Parser {
 
       if (context.parents.size) {
         let parents = Array.from(context.parents).map(x => x.names[0]).join(', ');
-        rows.interfaces.push(`interface ${ mastert.suffix } extends ${ parents } ${ curly }`);
+        rows.interfaces.push(`interface ${mastert.suffix} extends ${parents} ${curly}`);
       } else {
-        rows.interfaces.push(`interface ${ mastert.suffix } ${ curly }`);
+        rows.interfaces.push(`interface ${mastert.suffix} ${curly}`);
       }
 
       for (let p of context.properties) {
         let required = p.required ? ':' : '?:';
-        rows.interfaces.push(`${ p.key }${ required } ${ p.type };${ p.extras }`);
+        rows.interfaces.push(`${p.key}${required} ${p.type};${p.extras}`);
       }
 
       if (!isEmpty) {
@@ -91,12 +93,12 @@ export class Parser {
       for (let alias of aliases) {
         let t = extractNamespace(alias);
         let rows = getNamespace(t.prefix);
-        rows.aliases.push(`type ${ t.suffix } = ${ mastert.prefix === t.prefix ? mastert.suffix : master };`);
+        rows.aliases.push(`type ${t.suffix} = ${mastert.prefix === t.prefix ? mastert.suffix : master};`);
       }
     }
 
     for (let ns of Object.keys(rowsNamespace).sort()) {
-      outputRows.push(`declare namespace ${ ns } {`);
+      outputRows.push(`declare namespace ${ns} {`);
 
       for (let line of rowsNamespace[ns].enums) {
         outputRows.push(line);
@@ -146,7 +148,7 @@ export class Parser {
       });
 
       if (refs.length === 0) {
-        let enumNewString = `${ extractNamespace(context).prefix }.${ pascalCased(key) }`;
+        let enumNewString = `${extractNamespace(context).prefix}.${pascalCased(key)}`;
         this.enums.set(enumNewString, enumString);
         return enumNewString;
       } else {
@@ -177,12 +179,13 @@ export class Parser {
       }
 
       if (node.format) {
-        extraSet.add(`FORMAT: ${ node.format }`);
+        extraSet.add(`FORMAT: ${node.format}`);
       }
 
-      let extras = extraSet.size > 0 ? ` // ${ Array.from(extraSet).join(' & ') }` : '';
+      let extras = extraSet.size > 0 ? ` // ${Array.from(extraSet).join(' & ')}` : '';
+      let innerType = getInnerType(type);
 
-      interfaces[context][key].push({ key, type, extras, required });
+      interfaces[context][key].push({ key, type, extras, required, innerType });
     }
 
     let contexts: IContext[] = [];
@@ -198,28 +201,18 @@ export class Parser {
         }
 
         let node = nodes[0];
-        let type = node.type;
+        let innerType = node.innerType;
 
         // Validate & Normalize references
-
-        let innerType = getInnerType(type);
-
         if (!PREDEFINED.has(innerType)) {
           if (!interfaces[innerType] && !this.enums.has(innerType)) {
-            throw new Error(`Bad reference: ${ innerType } ${ type }`);
-          } else {
-            let t1 = extractNamespace(context);
-            let t2 = extractNamespace(innerType);
-            if (t1.prefix === t2.prefix) {
-              node.type = type.replace(innerType, t2.suffix);
-            }
+            throw new Error(`Bad reference: ${innerType} ${node.type}`);
           }
         }
 
         properties.push(node);
       }
 
-      properties.sort(propertiesSort);
       contexts.push({ names: [context], properties, parents: new Set<IContext>() });
     }
 
@@ -229,21 +222,21 @@ export class Parser {
     // find aliases && parents
     for (let a = 0; a < contexts.length; a++) {
       for (let b = a + 1; b < contexts.length; b++) {
-          let c1 = contexts[a];
-          let c2 = contexts[b];
-          if (c1.properties.length >= MIN_SUPER && c2.properties.length >= MIN_SUPER) {
-            let a1 = isSuperContext(c1, c2);
-            let a2 = isSuperContext(c2, c1);
-            if (a1 && a2) {
-              c1.names = c1.names.concat(c2.names);
-              contexts.splice(b, 1);
-              b--;
-            } else if (a1) {
-              parentsMap.get(c2).add(c1);
-            } else if (a2) {
-              parentsMap.get(c1).add(c2);
-            }
+        let c1 = contexts[a];
+        let c2 = contexts[b];
+        if (c1.properties.length >= MIN_SUPER && c2.properties.length >= MIN_SUPER) {
+          let a1 = isSuperContext(c1, c2);
+          let a2 = isSuperContext(c2, c1);
+          if (a1 && a2) {
+            c1.names = c1.names.concat(c2.names);
+            contexts.splice(b, 1);
+            b--;
+          } else if (a1) {
+            parentsMap.get(c2).add(c1);
+          } else if (a2) {
+            parentsMap.get(c1).add(c2);
           }
+        }
       }
     }
 
@@ -260,12 +253,23 @@ export class Parser {
     // clean parents properties
     for (let c of contexts) {
       c.parents.forEach((p) => {
-        for (let prop of p.properties ) {
+        for (let prop of p.properties) {
           let idx = c.properties.findIndex(x => x.key === prop.key);
           if (idx >= 0) { c.properties.splice(idx, 1); }
         }
-        c.properties.sort((a, b) => a.key.localeCompare(b.key));
       });
+
+      if (c.names.length > 0) {
+        c.properties.forEach((prop) => {
+          let t1 = extractNamespace(c.names[0]);
+          let t2 = extractNamespace(prop.innerType);
+          if (t1.prefix === t2.prefix) {
+            prop.type = prop.type.replace(prop.innerType, t2.suffix);
+          }
+        });
+      }
+
+      c.properties.sort(propertiesSort);
     }
 
     contexts.sort((a, b) => a.names[0].localeCompare(b.names[0]));
@@ -298,7 +302,7 @@ export class Parser {
         } else if (schema.$ref) {
           out = urnToId(schema.$ref);
         } else if (schema.additionalProperties) {
-          out = `{ [key: string]: ${ this.walk(schema.additionalProperties) } }`;
+          out = `{ [key: string]: ${this.walk(schema.additionalProperties)} }`;
         } else {
           out = 'any';
           this.error(schema);

@@ -31,4 +31,5 @@ export interface IProperty {
   type: string;
   extras: string;
   required: boolean;
+  innerType: string;
 }
