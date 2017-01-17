@@ -6,16 +6,16 @@ export const PREDEFINED = new Set(['number', 'string', 'boolean', 'any']);
 const ARRAY_TYPE = /^(.+?)(\[\])+$/;
 const KEY_TYPE = /^\{ \[key: string\]: (.+?) \}$/;
 
-export let getInnerType = (type: string) => {
+export const getInnerType = (type: string) => {
   let match: RegExpMatchArray;
   if (match = type.match(ARRAY_TYPE)) { type = match[1]; }
   if (match = type.match(KEY_TYPE)) { type = match[1]; }
   return type;
 };
 
-export let propertiesSort = (a: IProperty, b: IProperty) => a.key.localeCompare(b.key);
+export const propertiesSort = (a: IProperty, b: IProperty) => a.key.localeCompare(b.key);
 
-export let shortId = (id: string) => {
+export const shortId = (id: string) => {
   let index: number;
   index = id.lastIndexOf(':');
   if (index >= 0) { return id.slice(index + 1); }
@@ -24,8 +24,8 @@ export let shortId = (id: string) => {
   return id;
 };
 
-export let urnToId = (id: string) => {
-  let match = id.match(GENERIC_REGEX);
+export const urnToId = (id: string) => {
+  const match = id.match(GENERIC_REGEX);
   if (match) { id = match[1]; }
 
   return id
@@ -34,18 +34,18 @@ export let urnToId = (id: string) => {
 };
 
 const namespaceRegex = /^(.+)\.(.+?)$/;
-export let extractNamespace = (n: string) => {
-  let match = n.match(namespaceRegex);
+export const extractNamespace = (n: string) => {
+  const match = n.match(namespaceRegex);
   if (match) {
-    let prefix = match[1];
-    let suffix = match[2];
+    const prefix = match[1];
+    const suffix = match[2];
     return { prefix, suffix };
   } else {
     return { prefix: null, suffix: n };
   }
 };
 
-export let isSuperContext = (a: IContext, b: IContext): boolean => (
+export const isSuperContext = (a: IContext, b: IContext): boolean => (
   a.properties.length > 0 &&
   b.properties.length > 0 &&
   a.properties.every(p1 =>
@@ -58,19 +58,19 @@ export let isSuperContext = (a: IContext, b: IContext): boolean => (
   )
 );
 
-export let unique = <T>(array: T[]): T[] => {
-  let serializedResults: string[] = [];
+export const unique = <T>(array: T[]): T[] => {
+  const serializedResults: string[] = [];
   return array.filter((item) => {
-    let serialized = JSON.stringify(item);
-    let uniq = serializedResults.every((i) => i !== serialized);
+    const serialized = JSON.stringify(item);
+    const uniq = serializedResults.every((i) => i !== serialized);
     if (uniq) { serializedResults.push(serialized); }
     return uniq;
   });
 };
 
-export let tsEnum = (e: string[]) => e.map(t => `'${t}'`).join(' | ');
+export const tsEnum = (e: string[]) => e.map(t => `'${t}'`).join(' | ');
 
-export let pascalCased = (text: string) => text
+export const pascalCased = (text: string) => text
   .replace(/([A-Z_])/g, ' $1')
   .replace(/\w+/g, (w) => w[0].toUpperCase() + w.slice(1).toLowerCase())
   .replace(/\s/g, '');

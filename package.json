@@ -27,7 +27,7 @@
   "dependencies": {
     "minimist": "^1.2.0",
     "through": "^2.3.8",
-    "typescript": "^2.0.10",
+    "typescript": "^2.1.5",
     "typescript-formatter": "^4.0.1",
     "vinyl-fs": "^2.4.4"
   },

@@ -2,7 +2,7 @@ export interface JSONSchema {
   type?: string;
   id?: string;
   properties?: { [name: string]: JSONSchema; };
-  format? : string;
+  format?: string;
   items?: JSONSchema;
   $ref?: string;
   enum?: string[];
