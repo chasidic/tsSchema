@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
 const typescript_formatter_1 = require("typescript-formatter");
 const fs_1 = require("fs");
 const path_1 = require("path");
@@ -10,10 +19,10 @@ class Parser {
         this.tree = [];
     }
     addFile(filename) {
-        let body = fs_1.readFileSync(filename, 'utf-8');
-        let json = JSON.parse(body);
+        const body = fs_1.readFileSync(filename, 'utf-8');
+        const json = JSON.parse(body);
         if (json.enum) {
-            let name = path_1.basename(filename, path_1.extname(filename));
+            const name = path_1.basename(filename, path_1.extname(filename));
             this.enums.set(name, common_1.tsEnum(json.enum));
         }
         else {
@@ -21,72 +30,77 @@ class Parser {
         }
     }
     compose(filename, callback) {
-        let contexts = this.merge();
-        let outputRows = [];
-        let rowsNamespace = {};
-        let getNamespace = (prefix) => {
-            rowsNamespace[prefix] = rowsNamespace[prefix] || { enums: [], interfaces: [], aliases: [] };
-            return rowsNamespace[prefix];
-        };
-        this.enums.forEach((enums, n) => {
-            let t = common_1.extractNamespace(n);
-            let rows = getNamespace(t.prefix);
-            rows.enums.push(`type ${t.suffix} = ${enums};`);
-        });
-        for (let context of contexts) {
-            let master = context.names[0];
-            let mastert = common_1.extractNamespace(master);
-            let rows = getNamespace(mastert.prefix);
-            let isEmpty = context.properties.length === 0;
-            let curly = isEmpty ? '{}' : '{';
-            if (context.parents.size) {
-                let parents = Array.from(context.parents).map(x => x.names[0]).join(', ');
-                rows.interfaces.push(`interface ${mastert.suffix} extends ${parents} ${curly}`);
+        return __awaiter(this, void 0, void 0, function* () {
+            const contexts = this.merge();
+            const outputRows = ['/* tslint:disable */', ''];
+            const rowsNamespace = {};
+            const getNamespace = (prefix) => {
+                rowsNamespace[prefix] = rowsNamespace[prefix] || { enums: [], interfaces: [], aliases: [] };
+                return rowsNamespace[prefix];
+            };
+            this.enums.forEach((enums, n) => {
+                const t = common_1.extractNamespace(n);
+                const rows = getNamespace(t.prefix);
+                rows.enums.push(`type ${t.suffix} = ${enums};`);
+            });
+            for (const context of contexts) {
+                const master = context.names[0];
+                const mastert = common_1.extractNamespace(master);
+                const rows = getNamespace(mastert.prefix);
+                const isEmpty = context.properties.length === 0;
+                const curly = isEmpty ? '{}' : '{';
+                if (context.parents.size) {
+                    const parents = Array.from(context.parents).map(x => x.names[0]).join(', ');
+                    rows.interfaces.push(`interface ${mastert.suffix} extends ${parents} ${curly}`);
+                }
+                else {
+                    rows.interfaces.push(`interface ${mastert.suffix} ${curly}`);
+                }
+                for (const p of context.properties) {
+                    const required = p.required ? ':' : '?:';
+                    rows.interfaces.push(`${p.key}${required} ${p.type};${p.extras}`);
+                }
+                if (!isEmpty) {
+                    rows.interfaces.push('}');
+                }
+                rows.interfaces.push('');
+                const aliases = context.names.slice(1).sort((a, b) => a.localeCompare(b));
+                for (const alias of aliases) {
+                    const t = common_1.extractNamespace(alias);
+                    const aliasRows = getNamespace(t.prefix);
+                    aliasRows.aliases.push(`type ${t.suffix} = ${mastert.prefix === t.prefix ? mastert.suffix : master};`);
+                }
             }
-            else {
-                rows.interfaces.push(`interface ${mastert.suffix} ${curly}`);
+            for (const ns of Object.keys(rowsNamespace).sort()) {
+                outputRows.push(`declare namespace ${ns} {`);
+                for (const line of rowsNamespace[ns].enums) {
+                    outputRows.push(line);
+                }
+                if (rowsNamespace[ns].interfaces.length > 0) {
+                    outputRows.push('');
+                }
+                for (const line of rowsNamespace[ns].interfaces) {
+                    outputRows.push(line);
+                }
+                for (const line of rowsNamespace[ns].aliases) {
+                    outputRows.push(line);
+                }
+                outputRows.push('}\n');
             }
-            for (let p of context.properties) {
-                let required = p.required ? ':' : '?:';
-                rows.interfaces.push(`${p.key}${required} ${p.type};${p.extras}`);
-            }
-            if (!isEmpty) {
-                rows.interfaces.push('}');
-            }
-            rows.interfaces.push('');
-            let aliases = context.names.slice(1).sort((a, b) => a.localeCompare(b));
-            for (let alias of aliases) {
-                let t = common_1.extractNamespace(alias);
-                let rows = getNamespace(t.prefix);
-                rows.aliases.push(`type ${t.suffix} = ${mastert.prefix === t.prefix ? mastert.suffix : master};`);
-            }
-        }
-        for (let ns of Object.keys(rowsNamespace).sort()) {
-            outputRows.push(`declare namespace ${ns} {`);
-            for (let line of rowsNamespace[ns].enums) {
-                outputRows.push(line);
-            }
-            if (rowsNamespace[ns].interfaces.length > 0) {
-                outputRows.push('');
-            }
-            for (let line of rowsNamespace[ns].interfaces) {
-                outputRows.push(line);
-            }
-            for (let line of rowsNamespace[ns].aliases) {
-                outputRows.push(line);
-            }
-            outputRows.push('}\n');
-        }
-        let output = outputRows.join('\n');
-        typescript_formatter_1.processString(filename, output, {
-            baseDir: path_1.resolve(__dirname, '../'),
-            replace: false,
-            verify: false,
-            tsconfig: false,
-            tslint: false,
-            editorconfig: false,
-            tsfmt: true
-        }).then(x => {
+            const output = outputRows.join('\n');
+            const x = yield typescript_formatter_1.processString(filename, output, {
+                baseDir: path_1.resolve(__dirname, '../'),
+                replace: false,
+                verify: false,
+                tsconfig: false,
+                tslint: false,
+                editorconfig: false,
+                tsfmt: true,
+                tsconfigFile: null,
+                tslintFile: null,
+                vscode: false,
+                tsfmtFile: null
+            });
             fs_1.writeFileSync(filename, x.dest);
             callback(x.error);
         });
@@ -96,15 +110,15 @@ class Parser {
             return type;
         }
         else {
-            let enumString = common_1.tsEnum(type);
-            let refs = [];
+            const enumString = common_1.tsEnum(type);
+            const refs = [];
             this.enums.forEach((enums, ref) => {
                 if (enums === enumString) {
                     refs.push(ref);
                 }
             });
             if (refs.length === 0) {
-                let enumNewString = `${common_1.extractNamespace(context).prefix}.${common_1.pascalCased(key)}`;
+                const enumNewString = `${common_1.extractNamespace(context).prefix}.${common_1.pascalCased(key)}`;
                 this.enums.set(enumNewString, enumString);
                 return enumNewString;
             }
@@ -114,13 +128,13 @@ class Parser {
         }
     }
     merge() {
-        let interfaces = {};
-        for (let node of this.tree) {
-            let type = this.checkType(node.type, node.context, node.key);
-            let context = node.context;
-            let key = node.key;
-            let required = node.required;
-            let extraSet = new Set();
+        const interfaces = {};
+        for (const node of this.tree) {
+            const type = this.checkType(node.type, node.context, node.key);
+            const context = node.context;
+            const key = node.key;
+            const required = node.required;
+            const extraSet = new Set();
             interfaces[context] = interfaces[context] || {};
             interfaces[context][key] = interfaces[context][key] || [];
             if (type.startsWith('any')) {
@@ -132,21 +146,21 @@ class Parser {
             if (node.format) {
                 extraSet.add(`FORMAT: ${node.format}`);
             }
-            let extras = extraSet.size > 0 ? ` // ${Array.from(extraSet).join(' & ')}` : '';
-            let innerType = common_1.getInnerType(type);
+            const extras = extraSet.size > 0 ? ` // ${Array.from(extraSet).join(' & ')}` : '';
+            const innerType = common_1.getInnerType(type);
             interfaces[context][key].push({ key, type, extras, required, innerType });
         }
-        let contexts = [];
-        for (let context of Object.keys(interfaces)) {
-            let properties = [];
-            for (let key of Object.keys(interfaces[context])) {
-                let nodes = common_1.unique(interfaces[context][key]);
+        const contexts = [];
+        for (const context of Object.keys(interfaces)) {
+            const properties = [];
+            for (const key of Object.keys(interfaces[context])) {
+                const nodes = common_1.unique(interfaces[context][key]);
                 // Validate single node
                 if (nodes.length > 1) {
                     throw new Error('Cannot perform merge!');
                 }
-                let node = nodes[0];
-                let innerType = node.innerType;
+                const node = nodes[0];
+                const innerType = node.innerType;
                 // Validate & Normalize references
                 if (!common_1.PREDEFINED.has(innerType)) {
                     if (!interfaces[innerType] && !this.enums.has(innerType)) {
@@ -157,16 +171,16 @@ class Parser {
             }
             contexts.push({ names: [context], properties, parents: new Set() });
         }
-        let parentsMap = new Map();
+        const parentsMap = new Map();
         contexts.forEach(c => parentsMap.set(c, new Set()));
         // find aliases && parents
         for (let a = 0; a < contexts.length; a++) {
             for (let b = a + 1; b < contexts.length; b++) {
-                let c1 = contexts[a];
-                let c2 = contexts[b];
+                const c1 = contexts[a];
+                const c2 = contexts[b];
                 if (c1.properties.length >= MIN_SUPER && c2.properties.length >= MIN_SUPER) {
-                    let a1 = common_1.isSuperContext(c1, c2);
-                    let a2 = common_1.isSuperContext(c2, c1);
+                    const a1 = common_1.isSuperContext(c1, c2);
+                    const a2 = common_1.isSuperContext(c2, c1);
                     if (a1 && a2) {
                         c1.names = c1.names.concat(c2.names);
                         contexts.splice(b, 1);
@@ -182,19 +196,19 @@ class Parser {
             }
         }
         // flatten parents
-        for (let c of contexts) {
-            let cSet = parentsMap.get(c);
-            let newSet = new Set(cSet);
+        for (const c of contexts) {
+            const cSet = parentsMap.get(c);
+            const newSet = new Set(cSet);
             cSet.forEach((p) => {
                 parentsMap.get(p).forEach((s) => { newSet.delete(s); });
             });
             c.parents = newSet;
         }
         // clean parents properties
-        for (let c of contexts) {
+        for (const c of contexts) {
             c.parents.forEach((p) => {
-                for (let prop of p.properties) {
-                    let idx = c.properties.findIndex(x => x.key === prop.key);
+                for (const prop of p.properties) {
+                    const idx = c.properties.findIndex(x => x.key === prop.key);
                     if (idx >= 0) {
                         c.properties.splice(idx, 1);
                     }
@@ -202,8 +216,8 @@ class Parser {
             });
             if (c.names.length > 0) {
                 c.properties.forEach((prop) => {
-                    let t1 = common_1.extractNamespace(c.names[0]);
-                    let t2 = common_1.extractNamespace(prop.innerType);
+                    const t1 = common_1.extractNamespace(c.names[0]);
+                    const t2 = common_1.extractNamespace(prop.innerType);
                     if (t1.prefix === t2.prefix) {
                         prop.type = prop.type.replace(prop.innerType, t2.suffix);
                     }
@@ -220,16 +234,16 @@ class Parser {
             case 'object':
                 if (schema.id && schema.properties) {
                     out = common_1.urnToId(schema.id);
-                    for (let key of Object.keys(schema.properties)) {
-                        let child = schema.properties[key];
+                    for (const key of Object.keys(schema.properties)) {
+                        const child = schema.properties[key];
                         let type = this.walk(child);
                         if (child.enum) {
                             type = child.enum;
                         }
-                        let context = out;
-                        let format = child.format || null;
-                        let integer = child.type === 'integer';
-                        let required = !!child.required;
+                        const context = out;
+                        const format = child.format || null;
+                        const integer = child.type === 'integer';
+                        const required = !!child.required;
                         this.tree.push({ context, key, type, format, integer, required, enum: child.enum || null });
                     }
                 }

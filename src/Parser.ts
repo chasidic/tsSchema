@@ -40,7 +40,7 @@ export class Parser {
     }
   }
 
-  compose(filename: string, callback: (error: boolean) => void): void {
+  async compose(filename: string, callback: (error: boolean) => void): Promise<void> {
     const contexts = this.merge();
     const outputRows: string[] = ['/* tslint:disable */', ''];
 
@@ -121,18 +121,22 @@ export class Parser {
 
     const output = outputRows.join('\n');
 
-    processString(filename, output, {
+    const x = await processString(filename, output, {
       baseDir: resolve(__dirname, '../'),
       replace: false,
       verify: false,
       tsconfig: false,
       tslint: false,
       editorconfig: false,
-      tsfmt: true
-    }).then(x => {
-      writeFileSync(filename, x.dest);
-      callback(x.error);
+      tsfmt: true,
+      tsconfigFile: null,
+      tslintFile: null,
+      vscode: false,
+      tsfmtFile: null
     });
+
+    writeFileSync(filename, x.dest);
+    callback(x.error);
   }
 
   private checkType(type: string | string[], context: string, key: string) {

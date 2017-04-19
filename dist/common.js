@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.GENERIC_REGEX = /^(.+?)\</;
 exports.PREDEFINED = new Set(['number', 'string', 'boolean', 'any']);
 const ARRAY_TYPE = /^(.+?)(\[\])+$/;
@@ -27,7 +28,7 @@ exports.shortId = (id) => {
     return id;
 };
 exports.urnToId = (id) => {
-    let match = id.match(exports.GENERIC_REGEX);
+    const match = id.match(exports.GENERIC_REGEX);
     if (match) {
         id = match[1];
     }
@@ -37,10 +38,10 @@ exports.urnToId = (id) => {
 };
 const namespaceRegex = /^(.+)\.(.+?)$/;
 exports.extractNamespace = (n) => {
-    let match = n.match(namespaceRegex);
+    const match = n.match(namespaceRegex);
     if (match) {
-        let prefix = match[1];
-        let suffix = match[2];
+        const prefix = match[1];
+        const suffix = match[2];
         return { prefix, suffix };
     }
     else {
@@ -54,10 +55,10 @@ exports.isSuperContext = (a, b) => (a.properties.length > 0 &&
         p1.required === p2.required &&
         p1.extras === p2.extras)));
 exports.unique = (array) => {
-    let serializedResults = [];
+    const serializedResults = [];
     return array.filter((item) => {
-        let serialized = JSON.stringify(item);
-        let uniq = serializedResults.every((i) => i !== serialized);
+        const serialized = JSON.stringify(item);
+        const uniq = serializedResults.every((i) => i !== serialized);
         if (uniq) {
             serializedResults.push(serialized);
         }
