@@ -72,7 +72,7 @@ export class Parser {
       const curly = isEmpty ? '{}' : '{';
 
       if (context.parents.size) {
-        const parents = Array.from(context.parents).map(x => x.names[0]).join(', ');
+        const parents = Array.from(context.parents).map(c => c.names[0]).join(', ');
         rows.interfaces.push(`interface ${mastert.suffix} extends ${parents} ${curly}`);
       } else {
         rows.interfaces.push(`interface ${mastert.suffix} ${curly}`);
@@ -124,6 +124,7 @@ export class Parser {
     const x = await processString(filename, output, {
       baseDir: resolve(__dirname, '../'),
       replace: false,
+      vscodeFile: null,
       verify: false,
       tsconfig: false,
       tslint: false,

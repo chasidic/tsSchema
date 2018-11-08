@@ -3,8 +3,8 @@ export declare class Parser {
     private tree;
     addFile(filename: string): void;
     compose(filename: string, callback: (error: boolean) => void): Promise<void>;
-    private checkType(type, context, key);
-    private merge();
-    private walk(schema);
-    private error(schema);
+    private checkType;
+    private merge;
+    private walk;
+    private error;
 }

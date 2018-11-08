@@ -50,7 +50,7 @@ class Parser {
                 const isEmpty = context.properties.length === 0;
                 const curly = isEmpty ? '{}' : '{';
                 if (context.parents.size) {
-                    const parents = Array.from(context.parents).map(x => x.names[0]).join(', ');
+                    const parents = Array.from(context.parents).map(c => c.names[0]).join(', ');
                     rows.interfaces.push(`interface ${mastert.suffix} extends ${parents} ${curly}`);
                 }
                 else {
@@ -91,6 +91,7 @@ class Parser {
             const x = yield typescript_formatter_1.processString(filename, output, {
                 baseDir: path_1.resolve(__dirname, '../'),
                 replace: false,
+                vscodeFile: null,
                 verify: false,
                 tsconfig: false,
                 tslint: false,
