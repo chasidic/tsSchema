@@ -1,22 +1,23 @@
-const resolve = require('path').resolve;
+const path = require('path');
 const Parser = require('./dist/').Parser;
-const readFileSync = require('fs').readFileSync;
 const readdirSync = require('fs').readdirSync;
 
-const dir = resolve(process.env['_UBIMO_JAVA'], 'tools/JSONSchema/schemas');
-
-
+const dir = path.join(__dirname, 'my-temp', 'schemas');
 const files = readdirSync(dir, 'utf-8')
-  .filter(x => x.startsWith('com.ubimo.cm'))
-  .filter(x => !x.includes('Servlet'))
+    .filter(x => x.startsWith('com.ubimo.cm'))
+    .filter(x => !x.includes('Servlet'));
 
 const parser = new Parser();
 
 for (let file of files) {
-  let filename = resolve(dir, file);
-  parser.addFile(filename);
+    let filename = path.resolve(dir, file);
+    try {
+        parser.addFile(filename);
+    } catch (e) {
+        console.log(filename);
+    }
 }
 
 parser.compose('cm.d.ts', error => {
-  // console.log(error);
+    // console.log(error);
 });

@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GENERIC_REGEX = /^(.+?)\</;
-exports.PREDEFINED = new Set(['number', 'string', 'boolean', 'any']);
+exports.PREDEFINED = new Set(['number', 'string', 'boolean', 'string[]', 'any']);
 const ARRAY_TYPE = /^(.+?)(\[\])+$/;
 const KEY_TYPE = /^\{ \[key: string\]: (.+?) \}$/;
 exports.getInnerType = (type) => {

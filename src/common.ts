@@ -1,7 +1,7 @@
 import { IContext, IProperty } from './interfaces';
 
 export const GENERIC_REGEX = /^(.+?)\</;
-export const PREDEFINED = new Set(['number', 'string', 'boolean', 'any']);
+export const PREDEFINED = new Set(['number', 'string', 'boolean', 'string[]', 'any']);
 
 const ARRAY_TYPE = /^(.+?)(\[\])+$/;
 const KEY_TYPE = /^\{ \[key: string\]: (.+?) \}$/;
